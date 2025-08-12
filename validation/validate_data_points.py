@@ -124,36 +124,19 @@ def validate_data_point(data_point_path: Path, timeout: int):
     fail_to_pass = set(json.loads(data_point["FAIL_TO_PASS"]))
     pass_to_pass = set(json.loads(data_point["PASS_TO_PASS"]))
 
-    if is_fail_case:
-        # For fail cases, we expect FAIL_TO_PASS tests to NOT pass after the patch
-        # and PASS_TO_PASS tests to still pass
-        failed_fail_to_pass = fail_to_pass - tests_passed_after
-        if not failed_fail_to_pass:
-            print(f"Error: FAIL_TO_PASS tests should have failed after the patch, but they all passed: {fail_to_pass}")
-            return False
-        
-        missing_pass_to_pass = pass_to_pass - tests_passed_after
-        if missing_pass_to_pass:
-            print(f"Error: The following PASS_TO_PASS tests did not pass after the patch: {missing_pass_to_pass}")
-            return False
-        
-        print(f"Successfully validated fail case: {data_point_path}")
-        print(f"FAIL_TO_PASS tests that correctly failed: {sorted(failed_fail_to_pass)}")
-        return True
-    else:
-        # For normal cases, we expect all tests to pass
-        missing_fail_to_pass = fail_to_pass - tests_passed_after
-        if missing_fail_to_pass:
-            print(f"Error: The following FAIL_TO_PASS tests did not pass after the patch: {missing_fail_to_pass}")
-            return False
+    # For all cases, we expect all tests to pass
+    missing_fail_to_pass = fail_to_pass - tests_passed_after
+    if missing_fail_to_pass:
+        print(f"Error: The following FAIL_TO_PASS tests did not pass after the patch: {missing_fail_to_pass}")
+        return False
 
-        missing_pass_to_pass = pass_to_pass - tests_passed_after
-        if missing_pass_to_pass:
-            print(f"Error: The following PASS_TO_PASS tests did not pass after the patch: {missing_pass_to_pass}")
-            return False
+    missing_pass_to_pass = pass_to_pass - tests_passed_after
+    if missing_pass_to_pass:
+        print(f"Error: The following PASS_TO_PASS tests did not pass after the patch: {missing_pass_to_pass}")
+        return False
 
-        print(f"Successfully validated data point: {data_point_path}")
-        return True
+    print(f"Successfully validated data point: {data_point_path}")
+    return True
 
 
 def main():
