@@ -1,0 +1,61 @@
+name: Validate Data Points
+
+on:
+  push:
+    paths:
+      - 'data_points/**'
+  pull_request:
+    paths:
+      - 'data_points/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get modified files
+        id: modified_files
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PRs, compare with base branch
+            MODIFIED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep 'data_points/.*\.json' || true)
+          else
+            # For pushes, compare with previous commit
+            MODIFIED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'data_points/.*\.json' || true)
+          fi
+          echo "modified_files=$MODIFIED_FILES" >> $GITHUB_OUTPUT
+          echo "Modified files: $MODIFIED_FILES"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run validation
+        run: |
+          if [ -n "${{ steps.modified_files.outputs.modified_files }}" ]; then
+            echo "Validating modified data points..."
+            for file in ${{ steps.modified_files.outputs.modified_files }}; do
+              echo "Validating: $file"
+              python -m validation.validate_data_points "$file" --timeout 600
+            done
+          else
+            echo "No modified data points to validate."
+          fi
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-logs
+          path: logs/
+          retention-days: 7

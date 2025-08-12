@@ -1,0 +1,10 @@
+{
+  "required_fields": [
+    "instance_id",
+    "patch",
+    "repo",
+    "base_commit",
+    "FAIL_TO_PASS",
+    "PASS_TO_PASS"
+  ]
+}
