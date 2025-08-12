@@ -91,7 +91,6 @@ def validate_data_point(data_point_path: Path, timeout: int):
             namespace=None,
             rewrite_reports=False,
             modal=False,
-            validate=None,
             instance_image_tag="latest",
             report_dir=".",
         )
